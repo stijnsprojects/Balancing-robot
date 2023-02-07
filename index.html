@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="http://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
+        <link href="style.css" rel="stylesheet">
+        <title> Balancing robot </title>
+    </head>
+
+    <body style="margin-left: 25px;">
+        <h1> Balancing robot </h1>
+        <!--
+        <p> This is the guide that is used in the following video to make a balancing robot with ODrive / ODESC / ... : </p>
+        <iframe></iframe>
+        -->
+        <div>
+            <h2> Parts list </h2>
+            <ul style="margin-bottom: 35px;">
+                <li> ODrive / <a href="https://sequremall.com/?ref=stijnsprojects" target="_blank" rel="noopener noreferrer">ODESC</a> / ... </li>
+                <li> Two hoverboard wheels </li>
+                <li> Arduino Mega </li>
+                <li> Arduino Nano </li>
+                <li> NRF24L01 </li>
+                <li> MPU6050 </li>
+                <li> Arduino Uno + joystick + NRF24L01 (remote) </li>
+                <li> Battery </li>
+                <li> Frame </li>
+            </ul>
+        </div>
+        <div>
+            <h2> ODrive / ODESC / ... settings </h2>
+            <p> If you have not worked with ODrive / ODESC / ... before, I recommend following my <a href="https://stijnsprojects.github.io/Getting-started-Odrive-V3/" target="_blank" rel="noopener noreferrer">getting started guide</a>.</p>
+            <p> The following settings are based on the <a href="https://docs.odriverobotics.com/v/0.5.5/hoverboard.html" target="_blank" rel="noopener noreferrer">ODrive hoverboard guide</a>. </p>
+            <p> The hoverboard motors have 15 polepairs. </p>
+            <pre><code>odrv0.axis0.motor.config.pole_pairs = 15</code></pre>
+            <pre><code>odrv0.axis1.motor.config.pole_pairs = 15</code></pre>
+            <p> Because the motors have a high resistance, you need to increase the calibration voltage. </p>
+            <pre><code>odrv0.axis0.motor.config.resistance_calib_max_voltage = 4</code></pre>
+            <pre><code>odrv0.axis1.motor.config.resistance_calib_max_voltage = 4</code></pre>
+            <p> Lower the current range to get a better reading. </p>
+            <pre><code>odrv0.axis0.motor.config.requested_current_range = 25</code></pre>
+            <pre><code>odrv0.axis1.motor.config.requested_current_range = 25</code></pre>
+            <p> Lower the bandwidth to get better control. </p>
+            <pre><code>odrv0.axis0.motor.config.current_control_bandwidth = 100</code></pre>
+            <pre><code>odrv0.axis1.motor.config.current_control_bandwidth = 100</code></pre>
+            <p> Enter the estimated torque constant. </p>
+            <pre><code>odrv0.axis0.motor.config.torque_constant = 8.27 / 16</code></pre>
+            <pre><code>odrv0.axis1.motor.config.torque_constant = 8.27 / 16</code></pre>
+            <p> The hoverboard motors use hall effect sensors. </p>
+            <pre><code>odrv0.axis0.encoder.config.mode = ENCODER_MODE_HALL</code></pre>
+            <pre><code>odrv0.axis1.encoder.config.mode = ENCODER_MODE_HALL</code></pre>
+            <p> The hall effect sensors in combination with the magnets produce 90 counts per revolution. </p>
+            <pre><code>odrv0.axis0.encoder.config.cpr = 90</code></pre>
+            <pre><code>odrv0.axis1.encoder.config.cpr = 90</code></pre>
+            <p> To get better alignment, use 150 pulses for the calibration. </p>
+            <pre><code>odrv0.axis0.encoder.config.calib_scan_distance = 150</code></pre>
+            <pre><code>odrv0.axis1.encoder.config.calib_scan_distance = 150</code></pre>
+            <pre><code>odrv0.axis0.encoder.config.bandwidth = 100</code></pre>
+            <pre><code>odrv0.axis1.encoder.config.bandwidth = 100</code></pre>
+            <p> Set the controller gains. </p>
+            <pre><code>odrv0.axis0.controller.config.pos_gain = 1</code></pre>
+            <pre><code>odrv0.axis1.controller.config.pos_gain = 1</code></pre>
+            <pre><code>odrv0.axis0.controller.config.vel_gain = 0.02 * odrv0.axis0.motor.config.torque_constant * odrv0.axis0.encoder.config.cpr</code></pre>
+            <pre><code>odrv0.axis1.controller.config.vel_gain = 0.02 * odrv0.axis1.motor.config.torque_constant * odrv0.axis1.encoder.config.cpr</code></pre>
+            <pre><code>odrv0.axis0.controller.config.vel_integrator_gain = 0.1 * odrv0.axis0.motor.config.torque_constant * odrv0.axis0.encoder.config.cpr</code></pre>
+            <pre><code>odrv0.axis1.controller.config.vel_integrator_gain = 0.1 * odrv0.axis1.motor.config.torque_constant * odrv0.axis1.encoder.config.cpr</code></pre>
+            <p> Set the velocity limit. </p>
+            <pre><code>odrv0.axis0.controller.config.vel_limit = 10</code></pre>
+            <pre><code>odrv0.axis1.controller.config.vel_limit = 10</code></pre>
+            <p> Set the control mode to velocity. </p>
+            <pre><code>odrv0.axis0.controller.config.control_mode = CONTROL_MODE_VELOCITY_CONTROL</code></pre>
+            <pre><code>odrv0.axis1.controller.config.control_mode = CONTROL_MODE_VELOCITY_CONTROL</code></pre>
+            <p> If you are using the latest firmware version. </p>
+            <pre><code>odrv0.config.enable_brake_resistor = True</code></pre>
+            <p> After changing settings, use save and reboot. </p>
+            <pre><code>odrv0.save_configuration()</code></pre>
+            <pre><code>odrv0.reboot()</code></pre>
+            <br>
+        </div>
+        <div>
+            <h2> Programming </h2>
+            <p> This project is based on these two James Bruton projects. </p>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/sC1OkWSt5_I" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/VYU8CRTD2cA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            
+            <p> The remote uses the same code as James' remote but the pins are not the same and it only uses one joystick.</p>
+            <p> It's the same remote as my <a href="https://www.youtube.com/watch?v=37O-jKgATls" target="_blank" rel="noopener noreferrer">cable cam project</a>, based on this video.</p>
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/7rcVeFFHcFM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <p> There is a small mistake in the schematic, make sure to use the written pin numbers because pin 13 is not correct in the schematic.</p>
+            <p> There is code for the remote (Arduino Uno), the main controller (Arduino Mega) and the Arduino that handles the accelerometer (Arduino Nano), you can download the code <a download href="code.zip">here</a>. </p>
+            <p> There is also a calibration file in the folder, you need to run that on the Arduino Nano, replace the values in the imu-code and upload it. </p>
+            <br>
+        </div>
+        <div>
+            <h2> Wiring diagram </h2>
+            <p> For this project I used a dual axis <a href="https://sequremall.com/?ref=stijnsprojects" target="_blank" rel="noopener noreferrer">ODESC</a>. </p>
+            <img src="board.jpg" alt="not found" width="600px">
+            <p> This is the schematic for the balancing robot. </p>
+            <p> It is recommended to use 22 nanofarad capacitors between the hall effect sensor lines and ground, on the <u>ODESC these are on the board so they are not needed</u>. </p>
+            <img src="schematic.svg" alt="not found" width="750px">
+            <br>
+            <br>
+        </div>
+        <a href="https://www.youtube.com/c/StijnsProjects" target="_blank" rel="noopener noreferrer"><img src="youtubebutton.png" alt="not found" style="height: 75px; margin-top: 10px;"></a>
+    </body>
+</html>
